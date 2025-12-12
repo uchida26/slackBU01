@@ -62,8 +62,17 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         parsed = urllib.parse.urlparse(self.path)
-        if parsed.path != "/callback":
-            self.send_error(404, "Not Found")
+        normalized_path = parsed.path.rstrip("/") or "/"
+        if normalized_path != "/callback":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            body = """
+                <h2>Slack export OAuth callback server</h2>
+                <p>The OAuth redirect has not been received yet.</p>
+                <p>If you reached this page manually, please return to the authorization flow in Slack.</p>
+            """
+            self.wfile.write(body.encode("utf-8"))
             return
 
         params = urllib.parse.parse_qs(parsed.query)
